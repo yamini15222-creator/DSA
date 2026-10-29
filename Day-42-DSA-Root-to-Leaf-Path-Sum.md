@@ -1,378 +1,405 @@
-\# Day 42 DSA: Root-to-Leaf Path Sum
+# Day 42 DSA: Root-to-Leaf Path Sum
 
+## 1. Problem Statement
 
+Given the root of a binary tree and a target sum, determine whether any path from the root to a leaf adds up exactly to the target.
 
-\## 1. Problem Statement
+A **leaf** is a node that has no left child and no right child.
 
+The function returns `True` if at least one valid root-to-leaf path matches the target. Otherwise, it returns `False`.
 
+Assumptions:
+- The tree is a valid binary tree.
+- Node values are integers.
+- Negative values and duplicate values are allowed.
+- An empty tree returns `False`, even when the target is zero.
 
-Given the root of a binary tree and a target sum, determine whether the tree contains a root-to-leaf path whose node values add up to the target.
-
-
-
-A leaf is a node with no left or right child.
-
-
-
-The function returns `True` if a matching root-to-leaf path exists; otherwise, it returns `False`.
-
-
-
-Negative values and duplicate values are allowed.
-
-
-
-\## 2. Original Lesson Example
-
-
+## 2. Original Lesson Example
 
 ```text
+           5
+          / \
+         4   8
+        /   / \
+       11  13  4
+      / \      \
+     7   2      1
+```
 
-&#x20;          5
+For target `22`, the answer is `True`.
 
-&#x20;         / \\
+Matching path: `5 → 4 → 11 → 2`
 
-&#x20;        4   8
+Sum: `5 + 4 + 11 + 2 = 22`
 
-&#x20;       /   / \\
+For target `9`, the answer is `False`. Although `5 + 4 = 9`, node `4` is not a leaf, so the path cannot stop there.
 
-&#x20;      11  13  4
+| Target | Result | Explanation |
+|---:|:---|---|
+| 22 | `True` | Path: 5 → 4 → 11 → 2 |
+| 26 | `True` | Path: 5 → 8 → 13 |
+| 9 | `False` | The matching prefix ends at an internal node |
+| 18 | `True` | Path: 5 → 8 → 4 → 1 |
 
-&#x20;     / \\      \\
+## 3. Implementation Code
 
-&#x20;    7   2      1
+Save the Python implementation separately as `day42_path_sum.py`.
 
+```python
+class TreeNode:
+    def __init__(self, value, left=None, right=None):
+        self.value = value
+        self.left = left
+        self.right = right
 
 
+def has_path_sum(root, target):
+    if root is None:
+        return False
 
+    remaining = target - root.value
 
-For target 22, the answer is True.
+    # A path is complete only when the current node is a leaf.
+    if root.left is None and root.right is None:
+        return remaining == 0
 
+    return (
+        has_path_sum(root.left, remaining)
+        or has_path_sum(root.right, remaining)
+    )
 
 
-Path: 5 → 4 → 11 → 2
+# Build the original lesson tree.
+root = TreeNode(
+    5,
+    TreeNode(
+        4,
+        left=TreeNode(11, TreeNode(7), TreeNode(2))
+    ),
+    TreeNode(
+        8,
+        TreeNode(13),
+        TreeNode(4, right=TreeNode(1))
+    )
+)
 
+# Original lesson tests.
+assert has_path_sum(root, 22) is True
+assert has_path_sum(root, 26) is True
+assert has_path_sum(root, 9) is False
+assert has_path_sum(root, 18) is True
 
+print("All original lesson tests passed!")
+```
 
-Sum: 5 + 4 + 11 + 2 = 22
+## 4. How the Recursive Algorithm Works
 
+The algorithm carries the remaining target down the tree.
 
+1. If the node is `None`, return `False`.
+2. Subtract the current node's value from the target.
+3. If the current node is a leaf, return `True` only when the remaining target is zero.
+4. Otherwise, recursively check the left and right subtrees.
+5. Return `True` if either subtree contains a matching path.
 
-For target 9, the answer is False. Although 5 + 4 = 9, node 4 is not a leaf.
+The recursive calls use `or` because only one matching path is required.
 
+A leaf must have both children missing. A node with only one missing child is not a leaf.
 
+## 5. Dry Run for Target 22
 
-Other results:
+The algorithm explores the left subtree first.
 
-\- Target 22: True
+| Node | Target received | Remaining after subtraction | Decision |
+|---:|---:|---:|---|
+| 5 | 22 | 17 | Continue |
+| 4 | 17 | 13 | Continue |
+| 11 | 13 | 2 | Continue |
+| 7 | 2 | -5 | Leaf: return `False` |
+| 2 | 2 | 0 | Leaf: return `True` |
 
-\- Target 26: True (5 → 8 → 13)
+The successful result travels back through nodes `11`, `4`, and `5`.
 
-\- Target 9: False
+Each recursive call maintains its own remaining target. Exploring one branch does not modify the state of its sibling.
 
-\- Target 18: True (5 → 8 → 4 → 1)
+## 6. Negative Values and Zero Remaining
 
-3\. Implementation Code
+Negative values are allowed. Therefore, a negative remaining target does not automatically mean that a matching path is impossible.
 
-Save the Python implementation separately as day42\_path\_sum.py.
+Consider:
 
-class TreeNode:    def \_\_init\_\_(self, value, left=None, right=None):        self.value = value        self.left = left        self.right = rightdef has\_path\_sum(root, target):    if root is None:        return False    remaining = target - root.value    if root.left is None and root.right is None:        return remaining == 0    return (        has\_path\_sum(root.left, remaining)        or has\_path\_sum(root.right, remaining)    )# Original lesson treeroot = TreeNode(    5,    TreeNode(        4,        left=TreeNode(11, TreeNode(7), TreeNode(2)),    ),    TreeNode(        8,        TreeNode(13),        TreeNode(4, right=TreeNode(1)),    ),)print(has\_path\_sum(root, 22))  # Trueprint(has\_path\_sum(root, 26))  # Trueprint(has\_path\_sum(root, 9))   # Falseprint(has\_path\_sum(root, 18))  # True
+```text
+    5
+   /
+ -3
+```
 
+For target `2`, the path `5 → -3` sums to `2`, so the result is `True`.
 
+Do not reject a path simply because its remaining target is negative.
 
+Zero remaining is not sufficient by itself. Success is confirmed only at a leaf after subtracting that leaf's value.
 
+For example:
 
+```text
+    5
+   /
+   0
+```
 
+For target `5`, the result is `True` because the complete path `5 → 0` ends at a leaf and sums to `5`.
 
-4\. How the Algorithm Works
+## 7. Tests to Run
 
-At each node, subtract its value from the remaining target.
+Run these tests after defining `TreeNode`, `has_path_sum`, and the original lesson tree named `root`.
 
-1\. If the node is missing, return False.
+```python
+assert has_path_sum(None, 0) is False
 
-2\. If the node is a leaf, return whether the remaining target is zero.
+assert has_path_sum(TreeNode(7), 7) is True
+assert has_path_sum(TreeNode(7), 0) is False
 
-3\. Otherwise, check the left and right subtrees using or.
+assert has_path_sum(root, 22) is True
+assert has_path_sum(root, 26) is True
+assert has_path_sum(root, 9) is False
 
-A leaf must have both children missing. A missing child is not a valid endpoint.
+# Negative remainder can still lead to success.
+negative_path = TreeNode(5, left=TreeNode(-3))
+assert has_path_sum(negative_path, 2) is True
 
-5\. Trace for Target 22
+# Matching an internal node is insufficient.
+internal_match = TreeNode(5, left=TreeNode(2))
+assert has_path_sum(internal_match, 5) is False
 
-Node	Target received	Remaining after subtraction	Decision
+# Zero-valued nodes are allowed.
+zero_path = TreeNode(5, left=TreeNode(0))
+assert has_path_sum(zero_path, 5) is True
 
-5	22	17	Explore children
+# A single zero node is a valid nonempty path.
+assert has_path_sum(TreeNode(0), 0) is True
+```
 
-4	17	13	Explore children
+## 8. Assignment: Find a Matching Route
 
-11	13	2	Explore children
+Build the following binary tree:
 
-7	2	-5	Leaf: False
-
-2	2	0	Leaf: True
-
-
-
-The successful result travels back through nodes 11, 4, and 5.
-
-
-
-Each recursive call has its own remaining target, so exploring one branch does not change the state of its sibling.
-
-6\. Negative Values and Zero Remaining
-
-Negative values are allowed, so a negative remaining target does not automatically mean failure.
-
-
-
-Example:
-
-&#x20;   5
-
-&#x20;  /
-
-&#x20;-3
-
-
-
-
-
-For target 2, the path 5 → -3 sums to 2, so the result is True.
-
-
-
-Do not reject a path merely because its remaining target is negative.
-
-
-
-Zero remaining is not enough by itself. Success is confirmed only at a leaf after processing that leaf's value.
-
-7\. Tests to Run
-
-Run these tests with the TreeNode, has\_path\_sum, and original lesson root defined.
-
-assert has\_path\_sum(None, 0) is Falseassert has\_path\_sum(TreeNode(7), 7) is Trueassert has\_path\_sum(TreeNode(7), 0) is Falseassert has\_path\_sum(root, 22) is Trueassert has\_path\_sum(root, 26) is Trueassert has\_path\_sum(root, 9) is False# Negative remainder can still lead to success.negative\_path = TreeNode(5, left=TreeNode(-3))assert has\_path\_sum(negative\_path, 2) is True# Matching an internal node is insufficient.internal\_match = TreeNode(5, left=TreeNode(2))assert has\_path\_sum(internal\_match, 5) is False# Zero-valued nodes are allowed.zero\_path = TreeNode(5, left=TreeNode(0))assert has\_path\_sum(zero\_path, 5) is True# A single zero node is a valid nonempty path.assert has\_path\_sum(TreeNode(0), 0) is True
-
-
-
-
-
-
-
-8\. Assignment: Find a Matching Route
-
-Build this tree:
-
-&#x20;          10
-
-&#x20;         /  \\
-
-&#x20;        5   -3
-
-&#x20;       / \\    \\
-
-&#x20;      3   2    11
-
-&#x20;     /     \\
-
-&#x20;   -2       1
-
-
-
-
+```text
+           10
+          /  \
+         5   -3
+        / \    \
+       3   2    11
+      /     \
+    -2       1
+```
 
 Its root-to-leaf paths are:
 
+```text
 10 → 5 → 3 → -2 = 16
-
 10 → 5 → 2 → 1  = 18
-
 10 → -3 → 11    = 18
+```
 
+Implement `has_path_sum()` independently using the same function contract.
 
+### Expected Results
 
+| Target | Result |
+|---:|:---|
+| 16 | `True` |
+| 18 | `True` |
+| 15 | `False` |
+| 7 | `False` |
+| 100 | `False` |
 
+Targets `15` and `7` do not have a complete root-to-leaf path with that sum.
 
-Implement has\_path\_sum() independently.
+### Assignment Tree Construction and Tests
 
-Expected Results
+```python
+assignment_root = TreeNode(10)
+assignment_root.left = TreeNode(5)
+assignment_root.right = TreeNode(-3)
 
-Target	Result
+assignment_root.left.left = TreeNode(3)
+assignment_root.left.right = TreeNode(2)
+assignment_root.right.right = TreeNode(11)
 
-16	True
+assignment_root.left.left.left = TreeNode(-2)
+assignment_root.left.right.right = TreeNode(1)
 
-18	True
+assert has_path_sum(assignment_root, 16) is True
+assert has_path_sum(assignment_root, 18) is True
+assert has_path_sum(assignment_root, 15) is False
+assert has_path_sum(assignment_root, 7) is False
+assert has_path_sum(assignment_root, 100) is False
+```
 
-15	False
+## 9. Trace for Target 16
 
-7	False
+The matching path is `10 → 5 → 3 → -2`.
 
-100	False
+| Node | Remaining target calculation | Remaining |
+|---:|---|---:|
+| 10 | 16 − 10 | 6 |
+| 5 | 6 − 5 | 1 |
+| 3 | 1 − 3 | -2 |
+| -2 | -2 − (-2) | 0 |
 
+The remaining target becomes zero at leaf `-2`. Therefore, the result is `True`.
 
+## 10. Why Target 7 Returns False
 
-Assignment Tree Construction and Tests
+A valid path must begin at the root and finish at a leaf.
 
-assignment\_root = TreeNode(10)assignment\_root.left = TreeNode(5)assignment\_root.right = TreeNode(-3)assignment\_root.left.left = TreeNode(3)assignment\_root.left.right = TreeNode(2)assignment\_root.right.right = TreeNode(11)assignment\_root.left.left.left = TreeNode(-2)assignment\_root.left.right.right = TreeNode(1)assert has\_path\_sum(assignment\_root, 16) is Trueassert has\_path\_sum(assignment\_root, 18) is Trueassert has\_path\_sum(assignment\_root, 15) is Falseassert has\_path\_sum(assignment\_root, 7) is Falseassert has\_path\_sum(assignment\_root, 100) is False
+In the assignment tree, the path `10 → -3` sums to `7`, but node `-3` is not a leaf because it has a right child, `11`.
 
+The complete path `10 → -3 → 11` sums to `18`, not `7`.
 
+Therefore, `has_path_sum(assignment_root, 7)` returns `False`.
 
-
-
-
-
-9\. Trace for Target 16
-
-The matching path is 10 → 5 → 3 → -2.
-
-Node	Remaining target calculation	Remaining
-
-10	16 - 10	6
-
-5	6 - 5	1
-
-3	1 - 3	-2
-
-\-2	-2 - (-2)	0
-
-
-
-The remaining target becomes zero at leaf -2. Therefore, the result is True.
-
-10\. Why Target 7 Returns False
-
-A valid path must begin at the root and end at a leaf.
-
-
-
-No complete root-to-leaf path in the assignment tree sums to 7, so the function returns False.
-
-
-
-A matching sum at an internal node is not enough.
-
-11\. Warm-Up Question
+## 11. Warm-Up Question
 
 Consider this tree:
 
-&#x20;   4
+```text
+    4
+   /
+ -4
+```
 
-&#x20;  /
+For target `0`, the result is `True`.
 
-&#x20;-4
+Success is confirmed at leaf `-4`, because `4 + (-4) = 0`.
 
+## 12. Function Contract
 
+**Input:** A binary-tree root and an integer target sum.
 
+**Output:** A boolean indicating whether a root-to-leaf path equals the target.
 
+- An empty tree returns `False`, even when the target is zero.
+- Negative values and duplicate values are supported.
+- A matching sum at an internal node does not count.
+- A single-node tree is valid when its value equals the target.
+- The function does not modify the tree.
 
-For target 0, the result is True.
+## 13. Iterative DFS Extension
 
+Recursive DFS is concise, but a very deep tree may exceed Python's recursion limit. An iterative implementation uses a stack instead.
 
+The stack stores pairs:
 
-Success is confirmed at leaf -4, because 4 + (-4) = 0.
+`(node, remaining_target)`
 
-12\. Function Contract
+The `remaining_target` represents the amount needed **before processing that node**.
 
-Input: A binary-tree root and an integer target sum.
+For each popped pair:
 
+1. Subtract the node's value from the remaining target.
+2. If the node is a leaf, check whether the new remainder is zero.
+3. Otherwise, push its existing children with the updated remainder.
+4. Return `False` if the stack becomes empty without finding a matching path.
 
+```python
+def has_path_sum_iterative(root, target):
+    if root is None:
+        return False
 
-Output: A boolean indicating whether a root-to-leaf path equals the target.
+    stack = [(root, target)]
 
-\- An empty tree returns False, even when the target is zero.
+    while stack:
+        node, remaining_target = stack.pop()
+        remaining = remaining_target - node.value
 
-\- Negative values and duplicate values are supported.
+        if node.left is None and node.right is None:
+            if remaining == 0:
+                return True
+            continue
 
-\- A matching sum at an internal node does not count.
+        if node.right is not None:
+            stack.append((node.right, remaining))
 
-\- A single-node tree is valid when its value equals the target.
+        if node.left is not None:
+            stack.append((node.left, remaining))
 
-\- The tree is not modified.
+    return False
+```
 
-13\. Iterative DFS Extension
+### Iterative DFS Tests
 
-The iterative version uses a stack of (node, remaining\_target) pairs.
+Run these tests after defining the iterative function and both trees.
 
+```python
+assert has_path_sum_iterative(root, 22) is True
+assert has_path_sum_iterative(root, 26) is True
+assert has_path_sum_iterative(root, 9) is False
 
+assert has_path_sum_iterative(assignment_root, 16) is True
+assert has_path_sum_iterative(assignment_root, 18) is True
+assert has_path_sum_iterative(assignment_root, 15) is False
+assert has_path_sum_iterative(assignment_root, 7) is False
+assert has_path_sum_iterative(assignment_root, 100) is False
+assert has_path_sum_iterative(None, 0) is False
 
-The remaining target represents the amount needed before processing that node. Pop the pair, subtract the node's value, check for a leaf, and then push children with the updated remainder.
+print("All recursive and iterative tests passed!")
+```
 
-def has\_path\_sum\_iterative(root, target):    if root is None:        return False    stack = \[(root, target)]    while stack:        node, remaining\_target = stack.pop()        remaining = remaining\_target - node.value        if node.left is None and node.right is None:            if remaining == 0:                return True            continue        if node.right is not None:            stack.append((node.right, remaining))        if node.left is not None:            stack.append((node.left, remaining))    return False
+## 14. Institute-Level Discussion
 
+The function contract defines the input, output, and valid path rules.
 
+The leaf check is necessary because the path must end at a leaf. Reaching the target at an internal node is not enough.
 
+**Day 41 — Maximum Path Sum:** A path may start and end anywhere in the tree. The objective is to find the largest possible sum.
 
+**Day 42 — Root-to-Leaf Path Sum:** A path must start at the root and end at a leaf. The objective is to check whether its sum exactly matches the target.
 
+Day 41 returns a maximum sum, whereas Day 42 returns a boolean.
 
+Do not use Day 41's `max(0, gain)` rule in this problem. Negative values may be necessary to complete the target sum.
 
-Example tests:
+## 15. Corporate-Level Discussion
 
-assert has\_path\_sum\_iterative(root, 22) is Trueassert has\_path\_sum\_iterative(root, 26) is Trueassert has\_path\_sum\_iterative(root, 9) is Falseassert has\_path\_sum\_iterative(assignment\_root, 16) is Trueassert has\_path\_sum\_iterative(assignment\_root, 18) is Trueassert has\_path\_sum\_iterative(assignment\_root, 15) is Falseassert has\_path\_sum\_iterative(None, 0) is False
+Recursive DFS is concise and suitable for trees of ordinary depth. Iterative DFS is useful when a tree may be extremely deep because it avoids Python's recursive call-stack limit.
 
+Keep each path's remaining target separate so that processing one branch does not affect another.
 
+Clarify the required output before designing the algorithm:
 
+- **Boolean:** Whether any matching path exists.
+- **One path:** Return one matching route.
+- **All paths:** Return every matching route.
+- **Count:** Return the number of matching routes.
 
+These requirements need different output handling.
 
+## 16. Client-Level Discussion
 
+Define what counts as a completed route.
 
-14\. Institute-Level Discussion
+In this problem, completion means reaching a structural leaf. In another application, a designated terminal state may not be the same as a structural leaf.
 
-The function contract defines the input, output, and path rules. The leaf check is necessary because the path must end at a leaf. Reaching the target at an internal node is not enough.
+For monetary values, use an exact representation such as integer minor units, for example paise, instead of relying on approximate floating-point equality.
 
+## 17. Complexity Analysis
 
+Let `n` be the number of nodes and `h` be the height of the tree.
 
-Day 41 — Maximum Path Sum: A path may start and end anywhere in the tree, and the goal is to find the largest sum.
+- **Worst-case time:** `O(n)`, because every node may need to be visited.
+- **Recursive auxiliary space:** `O(h)` for the call stack.
+- **Iterative auxiliary space:** Up to `O(n)` in the worst case.
+- A successful path may allow the algorithm to stop early.
 
+## 18. Common Mistakes
 
-
-Day 42 — Root-to-Leaf Path Sum: A path must start at the root and end at a leaf, and the goal is to check for an exact target. The output is a boolean.
-
-
-
-Do not use Day 41's max(0, gain) rule here, because negative values may be necessary to complete the target sum.
-
-15\. Corporate-Level Discussion
-
-Recursive DFS is concise and suitable for trees of ordinary depth. A very deep tree may exceed Python's recursion limit, in which case iterative DFS avoids relying on recursive calls.
-
-
-
-Keep each path's remaining target separate.
-
-
-
-Also clarify the required output: a boolean, one matching path, all matching paths, or a count. These requirements need different output handling.
-
-16\. Client-Level Discussion
-
-Define what counts as a completed route. In this problem, completion means reaching a structural leaf. In another application, a designated terminal state may not be the same as a structural leaf.
-
-
-
-For monetary values, use an exact representation such as integer minor units (for example, paise) instead of relying on approximate floating-point equality.
-
-17\. Complexity Analysis
-
-Let n be the number of nodes and h the tree height.
-
-\- Time: O(n) in the worst case.
-
-\- Recursive auxiliary space: O(h) for the call stack.
-
-\- Iterative auxiliary space: Up to O(n) in the worst case.
-
-18\. Common Mistakes
-
-Mistake	Why it fails
-
-Return True whenever the remainder reaches zero	The current node may not be a leaf
-
-Treat one missing child as a leaf	Both children must be missing
-
-Return target == 0 for a missing node	A missing child is not a valid path endpoint
-
-Use and between child results	Only one matching path is required
-
-Reject every negative remainder	Negative node values can restore the target
-
-Use Day 41's maximum-path logic	Day 42 requires a root-to-leaf path
-
+| Mistake | Why it fails |
+|---|---|
+| Return `True` whenever the remainder reaches zero | The current node may not be a leaf |
+| Treat one missing child as a leaf | Both children must be missing |
+| Return `target == 0` for a missing node | A missing child is not a valid path endpoint |
+| Use `and` between child results | Only one matching path is required |
+| Reject every negative remainder | Negative node values can restore the target |
+| Use Day 41's maximum-path logic | Day 42 requires a root-to-leaf path |

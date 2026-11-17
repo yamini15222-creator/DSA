@@ -3,10 +3,10 @@
 
 from day47_flatten_binary_tree import (
     TreeNode,
-    flatten,
-    preorder_nodes,
-    flattened_nodes,
     assert_flattened,
+    flatten,
+    flattened_nodes,
+    preorder_nodes,
 )
 
 

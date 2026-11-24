@@ -93,3 +93,49 @@ assert top_k_frequent([7, 7, 7], 1) == [7]
 assert top_k_frequent([], 0) == []
 
 print("\nAll tests passed!")
+
+
+# Part D: Invalid input tests
+
+try:
+    top_k_frequent([1, 2], 1.5)
+except TypeError:
+    print("Invalid k type handled")
+
+try:
+    top_k_frequent([1, 2], -1)
+except ValueError:
+    print("Negative k handled")
+
+try:
+    top_k_frequent([1, "hello"], 1)
+except TypeError:
+    print("Invalid values handled")
+
+try:
+    top_k_frequent([7, 7], 2)
+except ValueError:
+    print("Invalid k range handled")
+
+
+# Part E: Input mutation test
+
+values = [3, 3, 1, 2]
+before = values.copy()
+
+top_k_frequent(values, 2)
+
+assert values == before
+
+print("Input unchanged!")
+
+
+# Part F: Explain-back checkpoint
+
+# (frequency, -value) works because:
+# 1. Lower frequency is weaker.
+# 2. If frequencies tie, larger value is weaker.
+# 3. Negative value makes the larger number smaller
+#    in heap ordering.
+# 4. Therefore, the correct weakest candidate
+#    stays at the root of the min-heap.

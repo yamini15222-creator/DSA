@@ -57,6 +57,23 @@ print("\nPart B:")
 print(top_k_frequent([4, 4, 4, 7, 7, 9], 2))
 
 
+# Part A: Explanation
+
+# Frequency map:
+# 6 -> 2
+# 2 -> 3
+# 9 -> 2
+# 4 -> 2
+
+# Tuple keys:
+# 6 -> (2, -6)
+# 2 -> (3, -2)
+# 9 -> (2, -9)
+# 4 -> (2, -4)
+
+# Weakest candidate: 9
+# Final result: [2, 4, 6]
+
 # Part C: Verify against sorting
 
 nums = [4, 4, 4, 7, 7, 9]
@@ -139,3 +156,8 @@ print("Input unchanged!")
 #    in heap ordering.
 # 4. Therefore, the correct weakest candidate
 #    stays at the root of the min-heap.
+
+# Test k = 0 with non-empty input
+assert top_k_frequent([1, 2], 0) == []
+
+print("K = 0 test passed!")
